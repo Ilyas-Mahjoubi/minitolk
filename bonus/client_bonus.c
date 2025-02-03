@@ -10,85 +10,101 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-
-
 #include "minitalk_bonus.h"
 
 static int	ft_atoi(char *str)
 {
+	int	i;
+	int	sign;
 	int	res;
-	int	sgin;
-	int	i;
 
-	res = 0;
-	sgin = 1;
 	i = 0;
-	while (str[i] == 32 || (str[i] >= 9 && str[i] <= 13))
-	{
+	sign = 1;
+	res = 0;
+	while ((str[i] == ' ' || (str[i] >= '\t' && str[i] <= '\r')))
 		i++;
-	}
+	if (str[i] == '-')
+		sign *= -1;
 	if (str[i] == '-' || str[i] == '+')
-	{
-		if (str[i] == '-')
-			sgin *= -1;
 		i++;
-	}
 	while (str[i] >= '0' && str[i] <= '9')
-	{
-		res = (res * 10 + (str[i] - '0'));
+	{		
+		res = res * 10 + (str[i] - 48);
 		i++;
 	}
-	return (res * sgin);
+	return (res * sign);
 }
 
-static void messsage_received(int sig_name)
+static void	ft_ascii_to_bit(char c, int pid)
 {
-	if (sig_name == SIGUSR2)
-		ft_printf("Messge sent successfully!\n");
-}
+	int	mask;
 
-static void ft_to_bit(char c, int pid)
-{
-	int	i;
-
-	i = 7;
-	while (i >= 0)
+	mask = 0b10000000;
+	while (mask)
 	{
-		if (c >> i & 1)
-			kill(pid, SIGUSR1);
+		if (c & mask)
+		{
+			if (kill(pid, SIGUSR1) == -1)
+			{
+				return((void)ft_printf("Unable to send Message"));
+				exit(1);
+			}
+		}
 		else
-			kill(pid, SIGUSR2);
-		usleep(100);
-		i--;
+		{
+			if (kill(pid, SIGUSR2) == -1)
+			{
+				return((void)ft_printf("Unable to send Message"));
+				exit(1);
+			}
+		}
+		usleep(800);
+		mask >>= 1;
 	}
 }
 
 static void	ft_str_to_bit(char *str, int pid)
 {
-	int i;
-
-	i = 0;
-	while (str[i])
+	while (*str)
 	{
-		ft_to_bit(str[i], pid);
-		i++;
+		ft_ascii_to_bit(*str, pid);
+		str++;
 	}
 }
-int main(int ac, char **av)
+static void signal_handler(int sig)
 {
-	int pid;
+	static int message_received;
+	
+	if (!message_received)
+	{
+		if (sig == SIGUSR1)
+		{
+			ft_printf("Message received by server\n");
+			message_received = 1;
+		}
+	}
+}
 
-	if (ac != 3)
+int	main(int argc, char **argv)
+{
+	struct sigaction sa;
+	int				pid;
+
+	sa = (struct sigaction){0};
+	if (argc == 3)
 	{
-		ft_printf("wrong number of arguments\n");
-		return (0);
+		sa.sa_handler = &signal_handler;
+		sa.sa_flags = SA_SIGINFO;
+		sigaction(SIGUSR1, &sa, NULL);
+		sigaction(SIGUSR2, &sa, NULL);
+		pid = ft_atoi(argv[1]);
+		if (!pid)
+		{
+			printf("Error : Wrong process ID !\n");
+			exit (0);
+		}
+		ft_str_to_bit(argv[2], pid);
 	}
-	signal(SIGUSR2, messsage_received);
-	pid = ft_atoi(av[1]);
-	if (!pid)
-	{
-		ft_printf("Error : Wrong process ID !\n");
-		exit (0);
-	}
-	ft_str_to_bit(av[2], pid);
+	else
+		printf("Error : Too few or too many arguments !\n");
 }

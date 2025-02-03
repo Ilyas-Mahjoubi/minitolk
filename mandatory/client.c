@@ -14,72 +14,66 @@
 
 static int	ft_atoi(char *str)
 {
-	int	res;
-	int	sgin;
 	int	i;
+	int	sign;
+	int	res;
 
-	res = 0;
-	sgin = 1;
 	i = 0;
-	while (str[i] == 32 || (str[i] >= 9 && str[i] <= 13))
-	{
+	sign = 1;
+	res = 0;
+	while ((str[i] == ' ' || (str[i] >= '\t' && str[i] <= '\r')))
 		i++;
-	}
+	if (str[i] == '-')
+		sign *= -1;
 	if (str[i] == '-' || str[i] == '+')
-	{
-		if (str[i] == '-')
-			sgin *= -1;
 		i++;
-	}
 	while (str[i] >= '0' && str[i] <= '9')
-	{
-		res = (res * 10 + (str[i] - '0'));
+	{		
+		res = res * 10 + (str[i] - 48);
 		i++;
 	}
-	return (res * sgin);
+	return (res * sign);
 }
 
-static void ft_to_bit(char c, int pid)
+static void	ft_ascii_to_bit(char c, int pid)
 {
-	int	i;
+	int	mask;
 
-	i = 7;
-	while (i >= 0)
+	mask = 0b10000000;
+	while (mask)
 	{
-		if (c >> i & 1)
+		if (c & mask)
 			kill(pid, SIGUSR1);
 		else
 			kill(pid, SIGUSR2);
-		usleep(100);
-		i--;
+		usleep(800);
+		mask >>= 1;
 	}
 }
 
 static void	ft_str_to_bit(char *str, int pid)
 {
-	int i;
-
-	i = 0;
-	while (str[i])
+	while (*str)
 	{
-		ft_to_bit(str[i], pid);
-		i++;
+		ft_ascii_to_bit(*str, pid);
+		str++;
 	}
 }
-int main(int ac, char **av)
-{
-	int pid;
 
-	if (ac != 3)
+int	main(int argc, char **argv)
+{
+	int	pid;
+
+	if (argc == 3)
 	{
-		ft_printf("wrong number of arguments\n");
-		return (0);
+		pid = ft_atoi(argv[1]);
+		if (!pid)
+		{
+			printf("Error : Wrong process ID !\n");
+			exit (0);
+		}
+		ft_str_to_bit(argv[2], pid);
 	}
-	pid = ft_atoi(av[1]);
-	if (!pid)
-	{
-		ft_printf("Error : Wrong process ID !\n");
-		exit (0);
-	}
-	ft_str_to_bit(av[2], pid);
+	else
+		printf("Error : Too few or too many arguments !\n");
 }

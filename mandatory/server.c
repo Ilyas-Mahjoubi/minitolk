@@ -6,37 +6,36 @@
 /*   By: ilmahjou <ilmahjou@student.42firenze.it    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/01 19:53:23 by ilmahjou          #+#    #+#             */
-/*   Updated: 2025/02/01 20:02:10 by ilmahjou         ###   ########.fr       */
+/*   Updated: 2025/02/03 01:57:56 by ilmahjou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
 
-static void take_signal(int sig)
+static void    signal_handler(int sig)
 {
-	static int	c;
-	static int	i;
+    static int  bit_position = 0;
+    static char received_char = 0;
 
-	if (sig == SIGUSR2)
-		c = c << 1;
-	else if (sig == SIGUSR1)
-		c = c << 1 | 0b00000001;
-	i++;
-	if (i == 8)
-	{
-		ft_printf("%c", c);
-		i = 0;
-		c = 0;
-	}
+    if (sig == SIGUSR1)
+        received_char |= (1 << (7 - bit_position));
+    bit_position++;
+
+    if (bit_position == 8)
+    {
+        write(1, &received_char, 1);
+        bit_position = 0;
+        received_char = 0;
+    }
 }
 
-int	main(void)
+int main(void)
 {
-	ft_printf("PID process: %d\n", getpid());
-	while (1)
-	{
-		signal(SIGUSR1, take_signal);
-		signal(SIGUSR2, take_signal);
-	}
-	return (0);
+    signal(SIGUSR1, signal_handler);
+    signal(SIGUSR2, signal_handler);
+
+    printf("Server PID: %d\n", getpid());
+
+    while (1)
+        pause();
 }
