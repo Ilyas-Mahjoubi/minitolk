@@ -28,7 +28,7 @@ static int	ft_atoi(char *str)
 	if (str[i] == '-' || str[i] == '+')
 		i++;
 	while (str[i] >= '0' && str[i] <= '9')
-	{		
+	{
 		res = res * 10 + (str[i] - 48);
 		i++;
 	}
@@ -46,7 +46,7 @@ static void	ft_ascii_to_bit(char c, int pid)
 		{
 			if (kill(pid, SIGUSR1) == -1)
 			{
-				return((void)ft_printf("Unable to send Message"));
+				ft_printf("Unable to send Message\n");
 				exit(1);
 			}
 		}
@@ -54,7 +54,7 @@ static void	ft_ascii_to_bit(char c, int pid)
 		{
 			if (kill(pid, SIGUSR2) == -1)
 			{
-				return((void)ft_printf("Unable to send Message"));
+				ft_printf("Unable to send Message\n");
 				exit(1);
 			}
 		}
@@ -71,10 +71,11 @@ static void	ft_str_to_bit(char *str, int pid)
 		str++;
 	}
 }
-static void signal_handler(int sig)
+
+static void	signal_handler(int sig)
 {
-	static int message_received;
-	
+	static int	message_received;
+
 	if (!message_received)
 	{
 		if (sig == SIGUSR1)
@@ -87,8 +88,8 @@ static void signal_handler(int sig)
 
 int	main(int argc, char **argv)
 {
-	struct sigaction sa;
-	int				pid;
+	struct sigaction	sa;
+	int					pid;
 
 	sa = (struct sigaction){0};
 	if (argc == 3)
@@ -98,7 +99,7 @@ int	main(int argc, char **argv)
 		sigaction(SIGUSR1, &sa, NULL);
 		sigaction(SIGUSR2, &sa, NULL);
 		pid = ft_atoi(argv[1]);
-		if (!pid)
+		if (!pid || pid < 0)
 		{
 			printf("Error : Wrong process ID !\n");
 			exit (0);

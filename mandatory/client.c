@@ -28,7 +28,7 @@ static int	ft_atoi(char *str)
 	if (str[i] == '-' || str[i] == '+')
 		i++;
 	while (str[i] >= '0' && str[i] <= '9')
-	{		
+	{
 		res = res * 10 + (str[i] - 48);
 		i++;
 	}
@@ -67,7 +67,7 @@ int	main(int argc, char **argv)
 	if (argc == 3)
 	{
 		pid = ft_atoi(argv[1]);
-		if (!pid)
+		if (!pid || pid < 0)
 		{
 			printf("Error : Wrong process ID !\n");
 			exit (0);
